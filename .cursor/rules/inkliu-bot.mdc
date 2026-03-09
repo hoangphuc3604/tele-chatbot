@@ -1,0 +1,208 @@
+---
+alwaysApply: true
+---
+
+# INKLIU Bot - Project Rules
+
+## 1. Code Style
+
+- **Indentation**: 4 spaces (không dùng tabs)
+- **Type Hints**: Bắt buộc đầy đủ cho tất cả functions/variables
+- **Line Length**: Tối đa 100 characters
+- **Blank Lines**: Theo PEP8 (2 blank lines between top-level definitions)
+
+## 2. Import Sorting (PEP8)
+
+Thứ tự import theo groups:
+1. Standard library (`import os`, `from datetime import datetime`)
+2. Third-party (`import aiogram`, `from langchain import ...`)
+3. Local application (`from .models import ...`, `from src.tools import ...`)
+
+Trong mỗi group: alphabetize
+
+```python
+# Đúng
+import os
+import sys
+from datetime import datetime, timedelta
+
+import aiogram
+from langchain import AgentExecutor
+
+from src.models import Task, User
+from src.tools import add_task, list_tasks
+```
+
+## 3. Project Structure
+
+```
+telegram-bot/
+├── src/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── agent.py
+│   ├── tools.py
+│   ├── models.py
+│   ├── database.py
+│   ├── scheduler.py
+│   └── keyboard.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_tools.py
+│   ├── test_models.py
+│   └── test_agent.py
+├── alembic/
+│   ├── versions/
+│   ├── env.py
+│   └── script.py.mako
+├── .env
+├── .env.example
+├── pyproject.toml
+├── uv.lock
+└── README.md
+```
+
+## 4. Docstrings (Google Style)
+
+```python
+def add_task(
+    user_id: int,
+    title: str,
+    deadline: datetime,
+    priority: int = 2,
+    tags: list[str] | None = None,
+    recurring: str | None = None,
+) -> Task:
+    """Thêm task mới cho user.
+
+    Args:
+        user_id: ID của user trong Telegram.
+        title: Tiêu đề task.
+        deadline: Thời hạn hoàn thành.
+        priority: Độ ưu tiên (1-4), mặc định là 2.
+        tags: Danh sách tag (ví dụ: ["work", "study"]).
+        recurring: Tần suất lặp ("daily", "weekly") hoặc None.
+
+    Returns:
+        Task: Object task vừa được tạo.
+
+    Raises:
+        ValueError: Khi deadline ở quá khứ.
+    """
+```
+
+## 5. Comments - Minimal
+
+**Chỉ comment khi logic phức tạp**, không comment những thứ hiển nhịn từ code.
+
+```python
+# Tốt - Logic phức tạp cần giải thích
+# Parse deadline từ input: "ngày mai 23h" → datetime object
+# Xử lý timezone Asia/Ho_Chi_Minh
+deadline = parse_vietnamese_datetime(user_input)
+
+# Không cần comment - Code đã tự giải thích
+user = User(id=user_id, first_name=first_name)
+```
+
+## 6. LangChain Tools Rules
+
+Khi viết tools cho Agent:
+
+- Sử dụng `@tool` decorator từ Pydantic v2
+- Luôn nhận `user_id: int` làm parameter đầu tiên
+- Return type phải rõ ràng
+- Mô tả ngắn gọn bằng tiếng Việt trong docstring
+
+```python
+from pydantic import BaseModel
+from langchain_core.tools import tool
+
+class AddTaskInput(BaseModel):
+    user_id: int
+    title: str
+    deadline: datetime
+    priority: int = 2
+
+@tool(args_schema=AddTaskInput)
+def add_task(user_id: int, title: str, deadline: datetime, priority: int = 2) -> str:
+    """Thêm task mới với deadline cụ thể."""
+    # ... implementation
+```
+
+## 7. Database Models (SQLAlchemy)
+
+- Sử dụng SQLAlchemy 2.0 style (declarative base)
+- Luôn có `user_id` foreign key
+- Sử dụng `Mapped[]` type hints
+
+```python
+from datetime import datetime
+from sqlalchemy import String, DateTime, Integer, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+class Task(Base):
+    __tablename__ = "tasks"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    title: Mapped[str] = mapped_column(String(255))
+    deadline: Mapped[datetime]
+    priority: Mapped[int] = mapped_column(default=2)
+```
+
+## 8. Error Handling
+
+- Sử dụng custom exceptions khi cần
+- Log errors với logger
+- Trả về user-friendly messages
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+try:
+    result = await db.add_task(task_data)
+except Exception as e:
+    logger.error(f"Failed to add task: {e}")
+    raise ValueError("Không thể thêm task. Vui lòng thử lại sau.")
+```
+
+## 9. Async/Await
+
+- Sử dụng `async/await` với aiogram 3.x
+- Không blocking event loop
+- Sử dụng `asyncio` khi cần parallel tasks
+
+## 10. Naming Conventions
+
+- **Functions/variables**: `snake_case` (add_task, user_id)
+- **Classes**: `PascalCase` (User, TaskManager)
+- **Constants**: `UPPER_SCASE` (MAX_RETRY = 3)
+- **Private methods**: `_private_method(self)`
+
+## 11. Generated Files - Use CLI
+
+**Không được trực tiếp edit các file được sinh ra bằng dòng lệnh.** Phải dùng CLI để thay đổi.
+
+| Loại file | Cách thay đổi |
+|-----------|---------------|
+| `pyproject.toml` (dependencies) | Dùng `uv add <package>` hoặc `uv remove <package>` |
+| `uv.lock` | Tự động sinh, không edit thủ công |
+| Alembic migrations | Dùng `uv run alembic revision --autogenerate` |
+| `venv/` | Dùng `uv venv` hoặc `uv sync` |
+| `.env` | Copy từ `.env.example` rồi edit thủ công (được phép) |
+
+```bash
+# Đúng - Dùng CLI để thêm package
+uv add aiogram
+
+# Sai - Tự ý sửa pyproject.toml
+# (sẽ bị ghi đè khi chạy uv sync)
+
+# Đúng - Dùng CLI để tạo migration
+uv run alembic revision --autogenerate -m "add user table"
+
+# Sai - Tự tạo file migration thủ công
+```
