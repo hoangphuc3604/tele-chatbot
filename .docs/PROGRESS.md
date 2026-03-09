@@ -19,8 +19,8 @@
 | Dependencies | ✅ Completed | Installed via uv sync |
 | Database | ✅ Completed | Models created, migration applied |
 | Bot Core | ✅ Completed | Basic handlers created |
-| AI Agent | ⚪ Not Started | No agent logic yet |
-| Tools | ⚪ Not Started | No tools yet |
+| AI Agent | ✅ Completed | LangChain agent created |
+| Tools | ✅ Completed | Task management tools |
 | Tests | ⚪ Not Started | No tests yet |
 
 ---
@@ -84,24 +84,23 @@ Task
 - [x] `src/keyboard.py` - Inline keyboards
 - [x] `src/handlers/` - Basic handlers (/start, /help)
 
-### ⚪ Phase 5: AI Agent
+### ✅ Phase 5: AI Agent (Completed)
 
-**Needs to be created:**
+**Completed:**
 
-- [ ] `src/agent.py` - LangChain agent setup
-- [ ] System prompt for agent
+- [x] `src/agent.py` - LangChain agent setup với Gemini
+- [x] System prompt cho agent
+- [x] Kết nối agent với bot handlers
 
-**Flow:**
+### ✅ Phase 6: Tools (Completed)
 
-```
-User Message → Agent → Tool (if needed) → Response → User
-```
+**Completed (LangChain tools):**
 
-### ⚪ Phase 6: Tools
-
-**Needs to be created (LangChain tools):**
-
-- [ ] `add_task` - Add new task
+- [x] `add_task` - Thêm task mới
+- [x] `list_tasks` - Liệt kê task
+- [x] `get_task` - Xem chi tiết task
+- [x] `update_task` - Cập nhật task
+- [x] `delete_task` - Xóa task
 - [ ] `list_tasks` - List tasks
 - [ ] `update_task` - Update task
 - [ ] `delete_task` - Delete task
@@ -126,10 +125,10 @@ User Message → Agent → Tool (if needed) → Response → User
 
 ## Next Steps (Immediate Priority)
 
-1. **Create AI agent**: `src/agent.py` with LangChain
-2. **Create LangChain tools**: `src/tools.py` (add_task, list_tasks, etc.)
-3. **Connect agent to bot**: Update handlers to use agent
-4. **Set up scheduler**: `src/scheduler.py` for reminders
+1. **Set up Google API Key**: Thêm `GOOGLE_API_KEY` vào `.env`
+2. **Test bot**: Chạy `uv run python -m src.main` và chat thử
+3. **Create scheduler**: `src/scheduler.py` cho reminders
+4. **Write tests**: `tests/` với pytest
 
 ---
 

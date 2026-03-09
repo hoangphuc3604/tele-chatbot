@@ -16,6 +16,7 @@ env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
 from src.keyboard import get_main_keyboard
+from src.agent import process_message
 
 logging.basicConfig(
     level=logging.INFO,
@@ -62,6 +63,40 @@ async def cmd_help(message: Message) -> None:
         ),
         parse_mode="HTML",
     )
+
+
+@router.message()
+async def handle_message(message: Message) -> None:
+    """Handle regular text messages with AI agent."""
+    if not message.text:
+        return
+
+    if not message.from_user:
+        return
+
+    user_id = message.from_user.id
+    first_name = message.from_user.first_name or "User"
+    user_message = message.text
+
+    logger.info(f"Message from {user_id}: {user_message}")
+
+    # Send "typing" action
+    await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")
+
+    try:
+        # Process message with agent
+        response = await process_message(user_id, user_message, first_name)
+        # Send response
+        await message.answer(response, parse_mode="HTML")
+
+    except Exception as e:
+        logger.error(f"Error handling message: {e}")
+        # Send user-friendly error message
+        error_msg = (
+            "❌ Đã xảy ra lỗi khi xử lý tin nhắn của bạn.\n\n"
+            "Vui lòng thử lại sau hoặc liên hệ hỗ trợ nếu lỗi tiếp tục xảy ra."
+        )
+        await message.answer(error_msg)
 
 
 async def main() -> None:

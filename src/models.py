@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import (
+    BigInteger,
     DateTime,
     ForeignKey,
     Integer,
@@ -22,7 +23,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    telegram_id: Mapped[int] = mapped_column(unique=True, index=True)
+    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     first_name: Mapped[str] = mapped_column(String(100))
     language_code: Mapped[Optional[str]] = mapped_column(String(10), default="vi")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
