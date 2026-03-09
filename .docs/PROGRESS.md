@@ -16,9 +16,9 @@
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Project Setup | ✅ Completed | Basic structure established |
-| Dependencies | 🟡 In Progress | Needs installation |
-| Database | ⚪ Not Started | No models yet |
-| Bot Core | ⚪ Not Started | No handlers yet |
+| Dependencies | ✅ Completed | Installed via uv sync |
+| Database | ✅ Completed | Models created, migration applied |
+| Bot Core | ✅ Completed | Basic handlers created |
 | AI Agent | ⚪ Not Started | No agent logic yet |
 | Tools | ⚪ Not Started | No tools yet |
 | Tests | ⚪ Not Started | No tests yet |
@@ -35,30 +35,22 @@
 - [x] Create directory structure `src/` and `tests/`
 - [x] Create `env.example` template
 
-### 🟡 Phase 2: Dependencies (In Progress)
+### ✅ Phase 2: Dependencies (Completed)
 
-**Needs to be done:**
+**Completed:**
 
-```bash
-# Core dependencies (already declared in pyproject.toml)
-uv sync
+- [x] Install core dependencies: `uv sync`
+- [x] Install dev dependencies: `uv sync --group dev`
+- [x] Create `.env` (copy from `env.example`)
+- [x] PostgreSQL database configured
 
-# Dev dependencies
-uv sync --group dev
-```
+### ✅ Phase 3: Database Models (Completed)
 
-**Files to create:**
+**Completed:**
 
-- [ ] `.env` (copy from `env.example`)
-- [ ] PostgreSQL database (Railway/Neon/Local)
-
-### ⚪ Phase 3: Database Models
-
-**Needs to be created:**
-
-- [ ] `src/models.py` - SQLAlchemy models (User, Task, etc.)
-- [ ] `src/database.py` - Database connection & session
-- [ ] Run Alembic migrations
+- [x] `src/models.py` - SQLAlchemy models (User, Task)
+- [x] `src/database.py` - Database connection & session
+- [x] Alembic migrations applied
 
 **Expected models:**
 
@@ -84,19 +76,13 @@ Task
 └── updated_at
 ```
 
-### ⚪ Phase 4: Bot Core
+### ✅ Phase 4: Bot Core (Completed)
 
-**Needs to be created:**
+**Completed:**
 
-- [ ] `src/main.py` - Bot entry point, dispatcher setup
-- [ ] `src/keyboard.py` - Inline keyboards
-- [ ] `src/handlers/` - Message handlers
-
-**Basic features:**
-
-- [ ] Start command
-- [ ] Help command
-- [ ] Echo/placeholder handler
+- [x] `src/main.py` - Bot entry point, dispatcher setup
+- [x] `src/keyboard.py` - Inline keyboards
+- [x] `src/handlers/` - Basic handlers (/start, /help)
 
 ### ⚪ Phase 5: AI Agent
 
@@ -140,11 +126,10 @@ User Message → Agent → Tool (if needed) → Response → User
 
 ## Next Steps (Immediate Priority)
 
-1. **Install dependencies**: `uv sync`
-2. **Create `.env`** and database
-3. **Create database models**: `src/models.py`, `src/database.py`
-4. **Run migrations**: `uv run alembic upgrade head`
-5. **Create bot core**: `src/main.py` with basic handlers
+1. **Create AI agent**: `src/agent.py` with LangChain
+2. **Create LangChain tools**: `src/tools.py` (add_task, list_tasks, etc.)
+3. **Connect agent to bot**: Update handlers to use agent
+4. **Set up scheduler**: `src/scheduler.py` for reminders
 
 ---
 
