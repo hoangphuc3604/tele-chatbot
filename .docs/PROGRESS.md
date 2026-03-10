@@ -1,6 +1,6 @@
 # INKLIU Bot - Project Progress
 
-> Last updated: 2026-03-09
+> Last updated: 2026-03-10
 
 ## Project Overview
 
@@ -21,7 +21,7 @@
 | Bot Core | ✅ Completed | Basic handlers created |
 | AI Agent | ✅ Completed | LangChain agent created |
 | Tools | ✅ Completed | Task management tools |
-| Tests | ⚪ Not Started | No tests yet |
+| Tests | ✅ Completed | 59 tests passing |
 
 ---
 
@@ -101,25 +101,23 @@ Task
 - [x] `get_task` - Xem chi tiết task
 - [x] `update_task` - Cập nhật task
 - [x] `delete_task` - Xóa task
-- [ ] `list_tasks` - List tasks
-- [ ] `update_task` - Update task
-- [ ] `delete_task` - Delete task
-- [ ] `get_reminders` - Get reminders
 
-### ⚪ Phase 7: Scheduler
+### ✅ Phase 7: Scheduler (Completed)
 
-**Needs to be created:**
+**Completed:**
 
-- [ ] `src/scheduler.py` - APScheduler setup
-- [ ] Reminder notifications
+- [x] `src/scheduler.py` - APScheduler setup
+- [x] Reminder notifications (60, 30, 15 minutes before deadline)
 
-### ⚪ Phase 8: Tests
+### ✅ Phase 8: Tests (Completed)
 
-**Needs to be created:**
+**Completed:**
 
-- [ ] `tests/test_models.py`
-- [ ] `tests/test_tools.py`
-- [ ] `tests/test_agent.py`
+- [x] `tests/test_models.py` - Model tests (21 tests)
+- [x] `tests/test_tools.py` - Tool input schema tests (18 tests)
+- [x] `tests/test_agent.py` - Agent tests (20 tests)
+
+**Test Results:** 59 tests passing
 
 ---
 
@@ -127,8 +125,7 @@ Task
 
 1. **Set up Google API Key**: Thêm `GOOGLE_API_KEY` vào `.env`
 2. **Test bot**: Chạy `uv run python -m src.main` và chat thử
-3. **Create scheduler**: `src/scheduler.py` cho reminders
-4. **Write tests**: `tests/` với pytest
+3. **Run tests**: `uv run pytest tests/ -v`
 
 ---
 

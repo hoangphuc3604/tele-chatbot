@@ -9,6 +9,7 @@ from langchain_core.tools import tool
 
 from src.database import get_db_context
 from src.models import Task, User
+from src.scheduler import scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ class AddTaskInput(BaseModel):
     priority: int = 2
     tags: Optional[str] = None
     recurring: Optional[str] = None
+    reminder_minutes: Optional[int] = 30
 
 
 class ListTasksInput(BaseModel):
@@ -41,6 +43,7 @@ class UpdateTaskInput(BaseModel):
     deadline: Optional[datetime] = None
     priority: Optional[int] = None
     status: Optional[str] = None
+    reminder_minutes: Optional[int] = None
 
 
 class DeleteTaskInput(BaseModel):
@@ -49,14 +52,30 @@ class DeleteTaskInput(BaseModel):
     user_id: int
 
 
+class DeleteTasksInput(BaseModel):
+    """Input schema for delete_tasks tool."""
+    user_id: int
+    task_ids: Optional[str] = None
+    status: Optional[str] = None
+    delete_all: bool = False
+
+
 class GetTaskInput(BaseModel):
     """Input schema for get_task tool."""
     task_id: int
     user_id: int
 
 
-def get_or_create_user(telegram_id: int, first_name: str) -> User:
-    """Get or create user by telegram ID."""
+def get_or_create_user(telegram_id: int, first_name: str) -> int:
+    """Get or create user by telegram ID.
+
+    Args:
+        telegram_id: Telegram user ID.
+        first_name: User's first name.
+
+    Returns:
+        Database user ID (primary key).
+    """
     with get_db_context() as db:
         user = db.query(User).filter(User.telegram_id == telegram_id).first()
         if not user:
@@ -66,7 +85,7 @@ def get_or_create_user(telegram_id: int, first_name: str) -> User:
             )
             db.add(user)
             db.flush()
-        return user
+        return user.id
 
 
 @tool(args_schema=AddTaskInput)
@@ -78,20 +97,21 @@ def add_task(
     priority: int = 2,
     tags: Optional[str] = None,
     recurring: Optional[str] = None,
+    reminder_minutes: Optional[int] = 30,
 ) -> str:
-    """Thêm task mới cho user.
+    """Add a new task for the user.
 
     Args:
-        user_id: ID của user trong database.
-        title: Tiêu đề task.
-        description: Mô tả chi tiết (optional).
-        deadline: Thời hạn hoàn thành (optional).
-        priority: Độ ưu tiên 1-4 (1=thấp nhất, 4=cao nhất), mặc định là 2.
-        tags: Danh sách tag, phân cách bằng dấu phẩy (optional).
-        recurring: Tần suất lặp "daily", "weekly", "monthly" (optional).
+        user_id: Database user ID.
+        title: Task title.
+        description: Task description (optional).
+        deadline: Due date for completion (optional).
+        priority: Priority level 1-4 (1=lowest, 4=highest), default is 2.
+        tags: Comma-separated tags (optional).
+        recurring: Recurrence frequency "daily", "weekly", "monthly" (optional).
 
     Returns:
-        Chuỗi xác nhận task đã được thêm.
+        Confirmation message with task details.
     """
     try:
         with get_db_context() as db:
@@ -103,10 +123,19 @@ def add_task(
                 priority=priority,
                 tags=tags,
                 recurring=recurring,
+                reminder_minutes=reminder_minutes,
                 status=Task.Status.PENDING,
             )
             db.add(task)
             db.flush()
+
+            logger.info(
+                f"Task {task.id} created: title='{title}', "
+                f"deadline={deadline}, reminder_minutes={reminder_minutes}"
+            )
+
+            if task.deadline and task.reminder_minutes is not None:
+                scheduler.schedule_reminder(task)
 
             deadline_str = deadline.strftime("%d/%m/%Y %H:%M") if deadline else "không có deadline"
             priority_text = {1: "thấp", 2: "trung bình", 3: "cao", 4: "khẩn cấp"}
@@ -120,7 +149,7 @@ def add_task(
             )
     except Exception as e:
         logger.error(f"Error adding task: {e}")
-        return f"❌ Lỗi khi thêm task: {str(e)}"
+        return "❌ Lỗi khi thêm task. Vui lòng thử lại sau."
 
 
 @tool(args_schema=ListTasksInput)
@@ -130,16 +159,16 @@ def list_tasks(
     priority: Optional[int] = None,
     limit: int = 10,
 ) -> str:
-    """Liệt kê các task của user.
+    """List all tasks for the user.
 
     Args:
-        user_id: ID của user trong database.
-        status: Lọc theo trạng thái "pending", "done", "cancelled" (optional).
-        priority: Lọc theo độ ưu tiên 1-4 (optional).
-        limit: Số lượng task tối đa, mặc định là 10.
+        user_id: Database user ID.
+        status: Filter by status "pending", "done", "cancelled" (optional).
+        priority: Filter by priority level 1-4 (optional).
+        limit: Maximum number of tasks, default is 10.
 
     Returns:
-        Chuỗi chứa danh sách các task.
+        Formatted string containing the task list.
     """
     try:
         with get_db_context() as db:
@@ -172,19 +201,19 @@ def list_tasks(
             return result
     except Exception as e:
         logger.error(f"Error listing tasks: {e}")
-        return f"❌ Lỗi khi lấy danh sách task: {str(e)}"
+        return "❌ Lỗi khi lấy danh sách task. Vui lòng thử lại sau."
 
 
 @tool(args_schema=GetTaskInput)
 def get_task(task_id: int, user_id: int) -> str:
-    """Lấy chi tiết một task cụ thể.
+    """Get details of a specific task.
 
     Args:
-        task_id: ID của task cần xem.
-        user_id: ID của user sở hữu task.
+        task_id: Task ID to retrieve.
+        user_id: Database user ID who owns the task.
 
     Returns:
-        Chuỗi chứa chi tiết task.
+        Formatted string containing task details.
     """
     try:
         with get_db_context() as db:
@@ -229,7 +258,7 @@ def get_task(task_id: int, user_id: int) -> str:
             return result
     except Exception as e:
         logger.error(f"Error getting task: {e}")
-        return f"❌ Lỗi khi lấy chi tiết task: {str(e)}"
+        return "❌ Lỗi khi lấy chi tiết task. Vui lòng thử lại sau."
 
 
 @tool(args_schema=UpdateTaskInput)
@@ -241,20 +270,21 @@ def update_task(
     deadline: Optional[datetime] = None,
     priority: Optional[int] = None,
     status: Optional[str] = None,
+    reminder_minutes: Optional[int] = None,
 ) -> str:
-    """Cập nhật thông tin task.
+    """Update task information.
 
     Args:
-        task_id: ID của task cần cập nhật.
-        user_id: ID của user sở hữu task.
-        title: Tiêu đề mới (optional).
-        description: Mô tả mới (optional).
-        deadline: Deadline mới (optional).
-        priority: Priority mới 1-4 (optional).
-        status: Trạng thái mới "pending", "done", "cancelled" (optional).
+        task_id: Task ID to update.
+        user_id: Database user ID who owns the task.
+        title: New title (optional).
+        description: New description (optional).
+        deadline: New deadline (optional).
+        priority: New priority level 1-4 (optional).
+        status: New status "pending", "done", "cancelled" (optional).
 
     Returns:
-        Chuỗi xác nhận đã cập nhật.
+        Confirmation message.
     """
     try:
         with get_db_context() as db:
@@ -274,28 +304,40 @@ def update_task(
                 task.deadline = deadline
             if priority is not None:
                 task.priority = priority
+            if reminder_minutes is not None:
+                task.reminder_minutes = reminder_minutes
+                if task.deadline and task.reminder_minutes:
+                    scheduler.cancel_reminder(task_id)
+                    scheduler.schedule_reminder(task)
             if status is not None:
                 if status in [Task.Status.PENDING, Task.Status.DONE, Task.Status.CANCELLED]:
                     task.status = status
+                    if status != Task.Status.PENDING:
+                        scheduler.cancel_reminder(task_id)
+            if deadline is not None:
+                task.deadline = deadline
+                if task.deadline and task.reminder_minutes:
+                    scheduler.cancel_reminder(task_id)
+                    scheduler.schedule_reminder(task)
 
             db.flush()
 
             return f"✅ Đã cập nhật task ID {task_id}!"
     except Exception as e:
         logger.error(f"Error updating task: {e}")
-        return f"❌ Lỗi khi cập nhật task: {str(e)}"
+        return "❌ Lỗi khi cập nhật task. Vui lòng thử lại sau."
 
 
 @tool(args_schema=DeleteTaskInput)
 def delete_task(task_id: int, user_id: int) -> str:
-    """Xóa một task.
+    """Delete a task.
 
     Args:
-        task_id: ID của task cần xóa.
-        user_id: ID của user sở hữu task.
+        task_id: Task ID to delete.
+        user_id: Database user ID who owns the task.
 
     Returns:
-        Chuỗi xác nhận đã xóa.
+        Confirmation message.
     """
     try:
         with get_db_context() as db:
@@ -308,9 +350,62 @@ def delete_task(task_id: int, user_id: int) -> str:
                 return "❌ Task không tồn tại!"
 
             task_title = task.title
+            scheduler.cancel_reminder(task_id)
             db.delete(task)
 
             return f"✅ Đã xóa task: {task_title}"
     except Exception as e:
         logger.error(f"Error deleting task: {e}")
-        return f"❌ Lỗi khi xóa task: {str(e)}"
+        return "❌ Lỗi khi xóa task. Vui lòng thử lại sau."
+
+
+@tool(args_schema=DeleteTasksInput)
+def delete_tasks(
+    user_id: int,
+    task_ids: Optional[str] = None,
+    status: Optional[str] = None,
+    delete_all: bool = False,
+) -> str:
+    """Delete multiple tasks at once.
+
+    Args:
+        user_id: Database user ID.
+        task_ids: Comma-separated task IDs (e.g., "1,2,3").
+        status: Filter by status "pending", "done", "cancelled".
+        delete_all: If True, delete all user tasks.
+
+    Returns:
+        Confirmation message with number of deleted tasks.
+    """
+    try:
+        with get_db_context() as db:
+            query = db.query(Task).filter(Task.user_id == user_id)
+
+            if delete_all:
+                tasks_to_delete = query.all()
+            elif status:
+                if status not in [Task.Status.PENDING, Task.Status.DONE, Task.Status.CANCELLED]:
+                    return "❌ Trạng thái không hợp lệ!"
+                tasks_to_delete = query.filter(Task.status == status).all()
+            elif task_ids:
+                try:
+                    task_id_list = [int(tid.strip()) for tid in task_ids.split(",")]
+                except ValueError:
+                    return "❌ ID task không hợp lệ!"
+                tasks_to_delete = query.filter(Task.id.in_(task_id_list)).all()
+            else:
+                return "❌ Vui lòng chọn task_ids, status, hoặc delete_all!"
+
+            if not tasks_to_delete:
+                return "❌ Không có task nào để xóa!"
+
+            deleted_count = 0
+            for task in tasks_to_delete:
+                scheduler.cancel_reminder(task.id)
+                db.delete(task)
+                deleted_count += 1
+
+            return f"✅ Đã xóa {deleted_count} task!"
+    except Exception as e:
+        logger.error(f"Error deleting tasks: {e}")
+        return "❌ Lỗi khi xóa task. Vui lòng thử lại sau."

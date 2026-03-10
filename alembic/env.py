@@ -2,8 +2,19 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 
 from alembic import context
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load environment variables
+env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(env_path)
+
+import os
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Import Base from models for autogenerate support
 from src.models import Base  # noqa: E402
@@ -11,6 +22,10 @@ from src.models import Base  # noqa: E402
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Set the URL from environment variable
+if DATABASE_URL:
+    config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

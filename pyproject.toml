@@ -8,11 +8,13 @@ dependencies = [
     "aiogram>=3.26.0",
     "alembic>=1.18.4",
     "apscheduler>=3.11.2",
+    "celery>=5.6.2",
     "langchain>=1.2.10",
     "langchain-google-genai>=4.2.1",
     "psycopg2-binary>=2.9.0",
     "pydantic>=2.12.5",
     "python-dotenv>=1.2.2",
+    "redis>=7.3.0",
     "sqlalchemy>=2.0.48",
 ]
 
