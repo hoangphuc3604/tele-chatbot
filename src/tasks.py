@@ -50,27 +50,27 @@ def send_reminder(self, task_id: int) -> str:
             logger.warning(f"User not found for task {task_id}")
             return f"User not found for task {task_id}"
 
-        priority_emoji = {
-            1: "🟢",
-            2: "🟡",
-            3: "🟠",
-            4: "🔴",
+        priority_text = {
+            1: "[Thấp]",
+            2: "[TB]",
+            3: "[Cao]",
+            4: "[Khẩn]",
         }
 
-        emoji = priority_emoji.get(task.priority, "🟡")
+        priority_mark = priority_text.get(task.priority, "[TB]")
 
         deadline_str = (
             task.deadline.strftime("%H:%M %d/%m/%Y") if task.deadline else ""
         )
 
         message = (
-            f"⏰ <b>Nhắc nhở deadline!</b>\n\n"
-            f"{emoji} <b>{task.title}</b>\n"
-            f"📅 Đến hạn: {deadline_str}\n"
+            f"**Nhắc nhở deadline!**\n\n"
+            f"{priority_mark} *{task.title}*\n"
+            f"Đến hạn: {deadline_str}\n"
         )
 
         if task.description:
-            message += f"\n📝 {task.description}"
+            message += f"\n{task.description}"
 
         logger.info(f"Sending reminder for task {task.id} to user {user.telegram_id}")
 

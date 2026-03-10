@@ -76,12 +76,12 @@ async def cmd_start(message: Message) -> None:
     """Handle /start command."""
     await message.answer(
         text=(
-            "👋 Xin chào {first_name}!\n\n"
+            "Xin chào {first_name}!\n\n"
             "Tôi là INKLIU Bot - Trợ lý AI cá nhân của bạn.\n\n"
             "Tôi có thể giúp bạn:\n"
-            "• 📝 Quản lý công việc (thêm, xem, sửa, xóa)\n"
-            "• ⏰ Nhắc nhở deadline\n"
-            "• 🎯 Đặt mục tiêu và theo dõi tiến độ\n\n"
+            "* Quản lý công việc (thêm, xem, sửa, xóa)\n"
+            "* Nhắc nhở deadline\n"
+            "* Đặt mục tiêu và theo dõi tiến độ\n\n"
             "Gõ /help để xem các lệnh có sẵn."
         ).format(first_name=message.from_user.first_name),
         reply_markup=get_main_keyboard(),
@@ -159,7 +159,7 @@ async def cmd_done(message: Message) -> None:
     if len(parts) < 2:
         await message.answer(
             text=(
-                "✅ <b>Đánh dấu hoàn thành</b>\n\n"
+                "[X] **Đánh dấu hoàn thành**\n\n"
                 "Vui lòng nhập ID task cần hoàn thành:\n"
                 "<code>/done [task_id]</code>\n\n"
                 "Ví dụ: <code>/done 1</code>\n\n"
@@ -174,7 +174,7 @@ async def cmd_done(message: Message) -> None:
         result = update_task.invoke({"task_id": task_id, "user_id": user_id, "status": "done"})
         await message.answer(result, parse_mode="HTML")
     except ValueError:
-        await message.answer("❌ ID task không hợp lệ!")
+        await message.answer("[Lỗi] ID task không hợp lệ!")
 
 
 @router.message(Command("delete"))
@@ -211,7 +211,7 @@ async def cmd_delete(message: Message) -> None:
             result = delete_task.invoke({"task_id": task_id, "user_id": user_id})
         await message.answer(result, parse_mode="HTML")
     except ValueError:
-        await message.answer("❌ ID task không hợp lệ!")
+        await message.answer("[Lỗi] ID task không hợp lệ!")
 
 
 @router.message(Command("cancel"))
@@ -226,7 +226,7 @@ async def cmd_cancel(message: Message) -> None:
     if len(parts) < 2:
         await message.answer(
             text=(
-                "❌ <b>Hủy công việc</b>\n\n"
+                "[-] **Hủy công việc**\n\n"
                 "Vui lòng nhập ID task cần hủy:\n"
                 "<code>/cancel [task_id]</code>\n\n"
                 "Ví dụ: <code>/cancel 1</code>\n\n"
@@ -241,7 +241,7 @@ async def cmd_cancel(message: Message) -> None:
         result = update_task.invoke({"task_id": task_id, "user_id": user_id, "status": "cancelled"})
         await message.answer(result, parse_mode="HTML")
     except ValueError:
-        await message.answer("❌ ID task không hợp lệ!")
+        await message.answer("[Lỗi] ID task không hợp lệ!")
 
 
 @router.message(Command("reminders"))
@@ -253,7 +253,7 @@ async def cmd_reminders(message: Message) -> None:
     user_id = get_or_create_user(message.from_user.id, message.from_user.first_name or "User")
     result = list_tasks.invoke({"user_id": user_id, "status": "pending", "limit": 20})
     await message.answer(
-        text=f"⏰ <b>Danh sách nhắc nhở</b>\n\n{result}",
+        text=f"**Danh sach nhac nho**\n\n{result}",
         parse_mode="HTML",
     )
 
@@ -286,7 +286,7 @@ async def handle_message(message: Message) -> None:
         logger.error(f"Error handling message: {e}")
         # Send user-friendly error message
         error_msg = (
-            "❌ Đã xảy ra lỗi khi xử lý tin nhắn của bạn.\n\n"
+            "[Lỗi] Đã xảy ra lỗi khi xử lý tin nhắn của bạn.\n\n"
             "Vui lòng thử lại sau hoặc liên hệ hỗ trợ nếu lỗi tiếp tục xảy ra."
         )
         await message.answer(error_msg)

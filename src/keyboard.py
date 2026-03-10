@@ -9,21 +9,21 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="➕ Thêm Task",
+                    text="[+] Thêm Task",
                     callback_data="add_task",
                 ),
                 InlineKeyboardButton(
-                    text="📋 Danh sách Task",
+                    text="[*] Danh sách Task",
                     callback_data="list_tasks",
                 ),
             ],
             [
                 InlineKeyboardButton(
-                    text="⏰ Nhắc nhở",
+                    text="[!] Nhắc nhở",
                     callback_data="reminders",
                 ),
                 InlineKeyboardButton(
-                    text="❓ Trợ giúp",
+                    text="[?] Trợ giúp",
                     callback_data="help",
                 ),
             ],
@@ -38,21 +38,21 @@ def get_task_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="✅ Hoàn thành",
+                    text="[X] Hoàn thành",
                     callback_data="task_done",
                 ),
                 InlineKeyboardButton(
-                    text="✏️ Sửa",
+                    text="[S] Sửa",
                     callback_data="task_edit",
                 ),
             ],
             [
                 InlineKeyboardButton(
-                    text="🗑️ Xóa",
+                    text="[-] Xóa",
                     callback_data="task_delete",
                 ),
                 InlineKeyboardButton(
-                    text="⬅️ Quay lại",
+                    text="[<] Quay lại",
                     callback_data="back_to_main",
                 ),
             ],
@@ -67,11 +67,11 @@ def get_confirmation_keyboard(action: str) -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="✅ Xác nhận",
+                    text="[OK] Xác nhận",
                     callback_data=f"confirm_{action}",
                 ),
                 InlineKeyboardButton(
-                    text="❌ Hủy",
+                    text="[X] Hủy",
                     callback_data=f"cancel_{action}",
                 ),
             ],

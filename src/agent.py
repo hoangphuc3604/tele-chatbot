@@ -143,4 +143,4 @@ async def process_message(user_id: int, message: str, first_name: str) -> str:
 
     except Exception as e:
         logger.error(f"Error processing message: {e}")
-        return "❌ Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau."
+        return "[Lỗi] Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau."

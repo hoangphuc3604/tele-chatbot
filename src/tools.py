@@ -141,15 +141,15 @@ def add_task(
             priority_text = {1: "thấp", 2: "trung bình", 3: "cao", 4: "khẩn cấp"}
 
             return (
-                f"✅ Đã thêm task mới!\n\n"
-                f"📝 <b>{title}</b>\n"
-                f"⏰ Deadline: {deadline_str}\n"
-                f"🔢 Priority: {priority_text.get(priority, 'trung bình')}\n"
-                f"🆔 Task ID: {task.id}"
+                f"[OK] Đã thêm task mới!\n\n"
+                f"* {title}\n"
+                f"Deadline: {deadline_str}\n"
+                f"Priority: {priority_text.get(priority, 'trung bình')}\n"
+                f"Task ID: {task.id}"
             )
     except Exception as e:
         logger.error(f"Error adding task: {e}")
-        return "❌ Lỗi khi thêm task. Vui lòng thử lại sau."
+        return "[Lỗi] Lỗi khi thêm task. Vui lòng thử lại sau."
 
 
 @tool(args_schema=ListTasksInput)
@@ -182,26 +182,26 @@ def list_tasks(
             tasks = query.order_by(Task.priority.desc(), Task.deadline.asc()).limit(limit).all()
 
             if not tasks:
-                return "📋 Bạn chưa có task nào!"
+                return "[Danh sách] Bạn chưa có task nào!"
 
-            result = "📋 <b>Danh sách công việc:</b>\n\n"
+            result = "[Danh sách] **Công việc:**\n\n"
             for i, task in enumerate(tasks, 1):
-                status_emoji = "✅" if task.status == Task.Status.DONE else "⏳"
-                priority_emoji = "🔴" if task.priority >= 3 else "🟡" if task.priority >= 2 else "🟢"
+                status_mark = "[X]" if task.status == Task.Status.DONE else "[ ]"
+                priority_mark = "[Cao]" if task.priority >= 3 else "[TB]" if task.priority >= 2 else "[Thấp]"
                 deadline_str = task.deadline.strftime("%d/%m/%Y %H:%M") if task.deadline else "không deadline"
 
                 result += (
-                    f"{i}. {status_emoji} <b>{task.title}</b>\n"
-                    f"   🆔 ID: {task.id} | {priority_emoji} Priority {task.priority} | ⏰ {deadline_str}\n"
+                    f"{i}. {status_mark} *{task.title}*\n"
+                    f"   ID: {task.id} | {priority_mark} Priority {task.priority} | Deadline: {deadline_str}\n"
                 )
 
             pending_count = sum(1 for t in tasks if t.status == Task.Status.PENDING)
-            result += f"\n📊 Tổng: {len(tasks)} task | ⏳ Chờ: {pending_count}"
+            result += f"\nTổng: {len(tasks)} task | Chờ: {pending_count}"
 
             return result
     except Exception as e:
         logger.error(f"Error listing tasks: {e}")
-        return "❌ Lỗi khi lấy danh sách task. Vui lòng thử lại sau."
+        return "[Lỗi] Lỗi khi lấy danh sách task. Vui lòng thử lại sau."
 
 
 @tool(args_schema=GetTaskInput)
@@ -223,42 +223,42 @@ def get_task(task_id: int, user_id: int) -> str:
             ).first()
 
             if not task:
-                return "❌ Task không tồn tại!"
+                return "[Lỗi] Task không tồn tại!"
 
             status_text = {
-                Task.Status.PENDING: "⏳ Chờ xử lý",
-                Task.Status.DONE: "✅ Hoàn thành",
-                Task.Status.CANCELLED: "❌ Đã hủy",
+                Task.Status.PENDING: "[ ] Chờ xử lý",
+                Task.Status.DONE: "[X] Hoàn thành",
+                Task.Status.CANCELLED: "[-] Đã hủy",
             }
             priority_text = {1: "Thấp", 2: "Trung bình", 3: "Cao", 4: "Khẩn cấp"}
 
             result = (
-                f"📝 <b>Chi tiết Task</b>\n\n"
-                f"🆔 ID: {task.id}\n"
-                f"📌 Tiêu đề: {task.title}\n"
+                f"**Chi tiết Task**\n\n"
+                f"ID: {task.id}\n"
+                f"Tiêu đề: {task.title}\n"
             )
 
             if task.description:
-                result += f"📄 Mô tả: {task.description}\n"
+                result += f"Mô tả: {task.description}\n"
 
             result += (
-                f"📊 Trạng thái: {status_text.get(task.status, task.status)}\n"
-                f"🔢 Priority: {priority_text.get(task.priority, 'Trung bình')}\n"
+                f"Trạng thái: {status_text.get(task.status, task.status)}\n"
+                f"Priority: {priority_text.get(task.priority, 'Trung bình')}\n"
             )
 
             if task.deadline:
-                result += f"⏰ Deadline: {task.deadline.strftime('%d/%m/%Y %H:%M')}\n"
+                result += f"Deadline: {task.deadline.strftime('%d/%m/%Y %H:%M')}\n"
 
             if task.tags:
-                result += f"🏷️ Tags: {task.tags}\n"
+                result += f"Tags: {task.tags}\n"
 
             if task.recurring:
-                result += f"🔄 Lặp: {task.recurring}\n"
+                result += f"Lặp: {task.recurring}\n"
 
             return result
     except Exception as e:
         logger.error(f"Error getting task: {e}")
-        return "❌ Lỗi khi lấy chi tiết task. Vui lòng thử lại sau."
+        return "[Lỗi] Lỗi khi lấy chi tiết task. Vui lòng thử lại sau."
 
 
 @tool(args_schema=UpdateTaskInput)
@@ -294,7 +294,7 @@ def update_task(
             ).first()
 
             if not task:
-                return "❌ Task không tồn tại!"
+                return "[Lỗi] Task không tồn tại!"
 
             if title is not None:
                 task.title = title
@@ -322,10 +322,10 @@ def update_task(
 
             db.flush()
 
-            return f"✅ Đã cập nhật task ID {task_id}!"
+            return f"[OK] Đã cập nhật task ID {task_id}!"
     except Exception as e:
         logger.error(f"Error updating task: {e}")
-        return "❌ Lỗi khi cập nhật task. Vui lòng thử lại sau."
+        return "[Lỗi] Lỗi khi cập nhật task. Vui lòng thử lại sau."
 
 
 @tool(args_schema=DeleteTaskInput)
@@ -347,16 +347,16 @@ def delete_task(task_id: int, user_id: int) -> str:
             ).first()
 
             if not task:
-                return "❌ Task không tồn tại!"
+                return "[Lỗi] Task không tồn tại!"
 
             task_title = task.title
             scheduler.cancel_reminder(task_id)
             db.delete(task)
 
-            return f"✅ Đã xóa task: {task_title}"
+            return f"[OK] Đã xóa task: {task_title}"
     except Exception as e:
         logger.error(f"Error deleting task: {e}")
-        return "❌ Lỗi khi xóa task. Vui lòng thử lại sau."
+        return "[Lỗi] Lỗi khi xóa task. Vui lòng thử lại sau."
 
 
 @tool(args_schema=DeleteTasksInput)
@@ -385,19 +385,19 @@ def delete_tasks(
                 tasks_to_delete = query.all()
             elif status:
                 if status not in [Task.Status.PENDING, Task.Status.DONE, Task.Status.CANCELLED]:
-                    return "❌ Trạng thái không hợp lệ!"
+                    return "[Lỗi] Trạng thái không hợp lệ!"
                 tasks_to_delete = query.filter(Task.status == status).all()
             elif task_ids:
                 try:
                     task_id_list = [int(tid.strip()) for tid in task_ids.split(",")]
                 except ValueError:
-                    return "❌ ID task không hợp lệ!"
+                    return "[Lỗi] ID task không hợp lệ!"
                 tasks_to_delete = query.filter(Task.id.in_(task_id_list)).all()
             else:
-                return "❌ Vui lòng chọn task_ids, status, hoặc delete_all!"
+                return "[Lỗi] Vui lòng chọn task_ids, status, hoặc delete_all!"
 
             if not tasks_to_delete:
-                return "❌ Không có task nào để xóa!"
+                return "[Lỗi] Không có task nào để xóa!"
 
             deleted_count = 0
             for task in tasks_to_delete:
@@ -405,7 +405,7 @@ def delete_tasks(
                 db.delete(task)
                 deleted_count += 1
 
-            return f"✅ Đã xóa {deleted_count} task!"
+            return f"[OK] Đã xóa {deleted_count} task!"
     except Exception as e:
         logger.error(f"Error deleting tasks: {e}")
-        return "❌ Lỗi khi xóa task. Vui lòng thử lại sau."
+        return "[Lỗi] Lỗi khi xóa task. Vui lòng thử lại sau."
