@@ -2,6 +2,11 @@
 set -e
 
 echo "Running database migrations..."
+
+# Debug: show DATABASE_URL (without password)
+echo "DATABASE_URL: ${DATABASE_URL:-EMPTY}@***"
+
+# Run migrations
 uv run alembic upgrade head
 
 echo "Starting bot..."
