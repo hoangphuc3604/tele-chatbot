@@ -50,10 +50,6 @@ uv.lock
 *.sqlite
 *.sqlite3
 
-# Alembic
-alembic/versions/*.py
-!alembic/versions/README
-
 # Testing
 .pytest_cache/
 .coverage
