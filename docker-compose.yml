@@ -21,6 +21,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    command: ["./scripts/start.sh"]
     depends_on:
       - postgres
       - redis
