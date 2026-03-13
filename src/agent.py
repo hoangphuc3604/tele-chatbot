@@ -256,7 +256,10 @@ async def process_message(user_id: int, message: str, first_name: str) -> str:
                 response = "".join(
                     block.get("text", "") for block in response if isinstance(block, dict)
                 )
-            response_str = str(response)
+            response_str = str(response).strip()
+
+            if not response_str:
+                response_str = "Xin lỗi, tôi không hiểu tin nhắn của bạn."
 
             save_conversation_message(db_user_id, "user", message)
             save_conversation_message(db_user_id, "assistant", response_str)

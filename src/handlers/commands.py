@@ -30,10 +30,12 @@ async def cmd_help(message: Message) -> None:
         text=(
             "📖 <b>Hướng dẫn sử dụng</b>\n\n"
             "<b>Các lệnh cơ bản:</b>\n"
-            "/start - Khởi động bot\n"
-            "/help - Xem hướng dẫn\n"
+            "/start - Khoi dong bot\n"
+            "/help - Xem huong dan\n"
             "/test - Test HTML formatting\n"
-            "/tasks - Xem danh sách công việc\n"
+            "/licham - Xem lich am\n"
+            "/lichduong - Xem lich duong\n"
+            "/tasks - Xem danh sach cong viec\n"
             "/add - Thêm công việc mới\n"
             "/done - Đánh dấu hoàn thành\n"
             "/delete - Xóa công việc\n"
@@ -66,4 +68,68 @@ async def cmd_test(message: Message) -> None:
             "Emoji: ✅ ❌ 🔥 💯"
         ),
         parse_mode="HTML",
+    )
+
+
+@router.message(Command("licham"))
+async def cmd_licham(message: Message) -> None:
+    from datetime import date
+
+    parts = message.text.split(maxsplit=1)
+
+    if len(parts) < 2:
+        today = date.today()
+        month = today.month
+        year = today.year
+    else:
+        param = parts[1].strip()
+        try:
+            month = int(param)
+            if month < 1 or month > 12:
+                await message.answer("Thang phai tu 1-12!")
+                return
+            today = date.today()
+            year = today.year
+        except ValueError:
+            await message.answer("Vui long nhap so thang hop le (1-12).\n\nVi du: /licham 3")
+            return
+
+    from src.keyboard import get_calendar_keyboard
+    keyboard = get_calendar_keyboard(month, year)
+    await message.answer(
+        f"<b>Lich Am - Thang {month} {year}</b>\n\nChon ngay de xem chi tiet:",
+        reply_markup=keyboard,
+        parse_mode="HTML"
+    )
+
+
+@router.message(Command("lichduong"))
+async def cmd_lichduong(message: Message) -> None:
+    from datetime import date
+
+    parts = message.text.split(maxsplit=1)
+
+    if len(parts) < 2:
+        today = date.today()
+        month = today.month
+        year = today.year
+    else:
+        param = parts[1].strip()
+        try:
+            month = int(param)
+            if month < 1 or month > 12:
+                await message.answer("Thang phai tu 1-12!")
+                return
+            today = date.today()
+            year = today.year
+        except ValueError:
+            await message.answer("Vui long nhap so thang hop le (1-12).\n\nVi du: /lichduong 3")
+            return
+
+    from src.keyboard import get_solar_calendar_keyboard
+    keyboard = get_solar_calendar_keyboard(month, year)
+    await message.answer(
+        f"<b>Lich Duong - Thang {month} {year}</b>\n\nHien thi ngay duong + ngay am:",
+        reply_markup=keyboard,
+        parse_mode="HTML"
     )

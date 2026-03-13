@@ -27,7 +27,10 @@ async def handle_message(message: Message) -> None:
 
     try:
         response = await process_message(user_id, user_message, first_name)
-        await message.answer(response, parse_mode="HTML")
+        if response:
+            await message.answer(response, parse_mode="HTML")
+        else:
+            await message.answer("Xin lỗi, tôi không hiểu tin nhắn của bạn.")
 
     except Exception as e:
         logger.error(f"Error handling message: {e}")
