@@ -1,10 +1,11 @@
-"""Handlers package for INKLIU Bot."""
-
 from aiogram import Dispatcher
 
-from src.main import router
+from src.handlers.commands import router as commands_router
+from src.handlers.tasks import router as tasks_router
+from src.handlers.messages import router as messages_router
 
 
 def register_handlers(dp: Dispatcher) -> None:
-    """Register all handlers to dispatcher."""
-    dp.include_router(router)
+    dp.include_router(commands_router)
+    dp.include_router(tasks_router)
+    dp.include_router(messages_router)
